@@ -4,7 +4,7 @@
 #include <assert.h>
 #include <pthread.h>
 #include <errno.h>
-#include <string.h> /* memset */
+#include <string.h>
 #include <unistd.h>
 
 int THREAD_COUNT = 0;

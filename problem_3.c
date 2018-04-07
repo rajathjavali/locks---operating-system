@@ -55,6 +55,7 @@ void critSection(void *id)
 	
 	long tid = (long)id;
 	/*Critical Section*/
+	__sync_synchronize();
 	while (!forceStop)
 	{
 		lock(tid);
