@@ -30,11 +30,10 @@ struct spin_lock_t
 
 void spin_lock (struct spin_lock_t *s)
 {
-	while(atomic_cmpxchg(&s->lockStatus, 0, 1))//s->lockStatus == 1) {
+	while(atomic_cmpxchg(&s->lockStatus, 0, 1))
 	{
-		// waiting on lock
+		//sched_yield();
 	}
-	//s->lockStatus = 1;
 }
 
 void spin_unlock (struct spin_lock_t *s)
@@ -42,51 +41,17 @@ void spin_unlock (struct spin_lock_t *s)
 	s->lockStatus = 0;
 }
 
-
-
-void mfence (void) {
-  asm volatile ("mfence" : : : "memory");
-}
-
-void lock (int tid)
-{
-	/*mfence required when ever we modify the data shared among the threads*/
-	threadSelection[tid] = 1;
-	mfence();
-
-	int max_ticket = 0;
-	int i = 0;
-	for (i = 0 ; i < THREAD_COUNT; ++i) {
-		max_ticket = threadTickets[i] > max_ticket ? threadTickets[i] : max_ticket;
-	}
-	
-	threadTickets[tid] = max_ticket + 1;
-	mfence();
-
-	threadSelection[tid] = 0;
-	mfence();
-
-	for (i = 0; i < THREAD_COUNT; ++i) {
-		while (threadSelection[i]) {sched_yield();}
-		while (threadTickets[i] != 0 && (threadTickets[i] < threadTickets[tid] || (threadTickets[i] == threadTickets[tid] && i > tid))) {sched_yield();}
-	}
-
-}
-
-void unlock (int tid)
-{
-	threadTickets[tid] = 0;
-}
-
 void critSection(void *id)
 {
 	
 	long tid = (long)id;
 	/*Critical Section*/
+
+	__sync_synchronize();
+
 	while (!forceStop)
 	{
 		spin_lock(&critSectionLock);
-		//lock(tid);
 
 		threadAllocCounter[tid]++;
 
@@ -100,7 +65,6 @@ void critSection(void *id)
 		in_cs = 0;
 	
 		spin_unlock(&critSectionLock);
-		//unlock(tid);
 	}
 	/*----------------*/
 	return;

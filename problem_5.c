@@ -7,23 +7,12 @@
 #include <string.h>
 #include <unistd.h>
 
-//#define atomic_xadd(P, V) __sync_fetch_and_add((P), (V))
-
 int THREAD_COUNT = 0;
 volatile int in_cs = 0;
 volatile int forceStop = 0;
 volatile int *threadTickets, *threadAllocCounter, *threadSelection;
 pthread_t *threadArray;
 
-// static inline int atomic_cmpxchg ( volatile int *ptr, int old, int new )
-// {
-// 	int ret;
-// 	asm volatile ("lock cmpxchgl %2,%1"
-// 		: "=a" (ret), "+m" (*ptr)
-// 		: "r" (new), "0" (old)
-// 		: "memory");
-// 	return ret;
-// }
 static inline int atomic_xadd(volatile int *ptr) {
   register int val __asm__("eax") = 1;
   asm volatile("lock xaddl %0,%1"
@@ -33,16 +22,6 @@ static inline int atomic_xadd(volatile int *ptr) {
   );  
   return val;
 }
-// static inline int atomic_xadd ( volatile int *ptr )
-// {
-// 	register int val __asm__("eax") = 1;
-// 	asm volatile ("lock xaddl %0,%1"
-// 		: "+r" (val)
-// 		: "m" (*ptr)
-// 		: "memory"
-// 		);
-// 	return val;
-// }
 
 struct spin_lock_t
 {
@@ -53,7 +32,10 @@ struct spin_lock_t
 void spin_lock (struct spin_lock_t *s)
 {
 	int waiting = atomic_xadd(&s->waiting);
-	while(waiting != s->served);
+	while(waiting != s->served)
+	{
+		//sched_yield();
+	}
 }
 
 void spin_unlock (struct spin_lock_t *s)
@@ -61,49 +43,16 @@ void spin_unlock (struct spin_lock_t *s)
 	atomic_xadd(&s->served);
 }
 
-void mfence (void) {
-  asm volatile ("mfence" : : : "memory");
-}
-
-void lock (int tid)
-{
-	/*mfence required when ever we modify the data shared among the threads*/
-	threadSelection[tid] = 1;
-	mfence();
-
-	int max_ticket = 0;
-	int i = 0;
-	for (i = 0 ; i < THREAD_COUNT; ++i) {
-		max_ticket = threadTickets[i] > max_ticket ? threadTickets[i] : max_ticket;
-	}
-	
-	threadTickets[tid] = max_ticket + 1;
-	mfence();
-
-	threadSelection[tid] = 0;
-	mfence();
-
-	for (i = 0; i < THREAD_COUNT; ++i) {
-		while (threadSelection[i]) {sched_yield();}
-		while (threadTickets[i] != 0 && (threadTickets[i] < threadTickets[tid] || (threadTickets[i] == threadTickets[tid] && i > tid))) {sched_yield();}
-	}
-
-}
-
-void unlock (int tid)
-{
-	threadTickets[tid] = 0;
-}
-
 void critSection(void *id)
 {
 	
 	long tid = (long)id;
+	__sync_synchronize();
+
 	/*Critical Section*/
 	while (!forceStop)
 	{
 		spin_lock(&critSectionLock);
-		//lock(tid);
 
 		threadAllocCounter[tid]++;
 
@@ -117,7 +66,6 @@ void critSection(void *id)
 		in_cs = 0;
 	
 		spin_unlock(&critSectionLock);
-		//unlock(tid);
 	}
 	/*----------------*/
 	return;
