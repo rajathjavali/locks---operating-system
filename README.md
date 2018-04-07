@@ -10,13 +10,13 @@ Only print things to STDOUT or STDERR when you are asked to do so. Of course it 
 # Hints
 Note where we've asked you to add specific comments to your code. Don't forget.
 It is fine to call functions from the C library.
-Variables shared between threads need to be declared as volatile. You can read more about volatile here (Links to an external site.)Links to an external site..  The key point: "This means that within a single thread of execution, a volatile access cannot be optimized out or reordered relative to another visible side effect that is separated by a sequence point (Links to an external site.)Links to an external site. from the volatile access." Roughly, volatile loads/stores will appear in the instruction sequence in the order of the C code (sequence points, are, e.g. lines separated by semicolon along with things like logical operators).
+Variables shared between threads need to be declared as volatile. The key point: "This means that within a single thread of execution, a volatile access cannot be optimized out or reordered relative to another visible side effect that is separated by a sequence point (Links to an external site.)Links to an external site. from the volatile access." Roughly, volatile loads/stores will appear in the instruction sequence in the order of the C code (sequence points, are, e.g. lines separated by semicolon along with things like logical operators).
 Pthreads programs require the extra -pthread argument to compile: gcc -O2 -Wall -Wextra -Werror foo.c -o foo -lm -pthread
 
 "man pthreads" gives an overview of this API including a list of commands that each have their own man pages.
-Various Pthreads tutorials can be found on the web; for example, this one (Links to an external site.)Links to an external site. is pretty good.
+Various Pthreads tutorials can be found on the web; 
 # Problem 1
-Write a pthreads program that creates a number of threads that repeatedly access a critical section that is synchronized using Lamport's Bakery algorithm (Links to an external site.)Links to an external site..
+Write a pthreads program that creates a number of threads that repeatedly access a critical section that is synchronized using Lamport's Bakery algorithm.
 
 Your program should take two command line options. First, the number of threads. Second, the number of seconds to run for.
 
