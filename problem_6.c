@@ -11,33 +11,7 @@ int THREAD_COUNT = 0;
 volatile int incircle_counter = 0, total_counter = 0;
 volatile int forceStop = 0;
 pthread_t *threadArray;
-
-static inline int atomic_xadd(volatile int *ptr) {
-  register int val __asm__("eax") = 1;
-  asm volatile("lock xaddl %0,%1"
-  : "+r" (val)
-  : "m" (*ptr)
-  : "memory"
-  );  
-  return val;
-}
-
-struct spin_lock_t
-{
-	volatile int served;
-	volatile int waiting;
-}critSectionLock;
-
-void spin_lock (struct spin_lock_t *s)
-{
-	int waiting = atomic_xadd(&s->waiting);
-	while(waiting != s->served);
-}
-
-void spin_unlock (struct spin_lock_t *s)
-{
-	atomic_xadd(&s->served);
-}
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void critSection(void)
 {
@@ -56,12 +30,12 @@ void critSection(void)
 		totalCount++;
 	}
 
-	spin_lock(&critSectionLock);
+	pthread_mutex_lock(&mutex);
 		
 	incircle_counter += localCount;
 	total_counter += totalCount;
 
-	spin_unlock(&critSectionLock);	
+	pthread_mutex_unlock(&mutex);
 
 	return;
 }
@@ -109,9 +83,6 @@ int main(int argc, char **argv)
 
 	threadArray = malloc ( sizeof(pthread_t) * THREAD_COUNT );
 	
-	critSectionLock.served = 0;
-	critSectionLock.waiting = 0;
-
 	int status = 0;
 	for(i = 0; i < THREAD_COUNT; ++i)
 	{
