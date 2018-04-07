@@ -19,7 +19,9 @@ void mfence (void) {
 
 void lock (int tid)
 {
-	/*mfence required when ever we modify the data shared among the threads*/
+	/*mfence required when ever we modify the data shared among the threads
+	*mfence signals all globally any modification done at a memory location and also prevents reordering of load store
+	*/
 	threadSelection[tid] = 1;
 	mfence();
 
@@ -45,6 +47,7 @@ void lock (int tid)
 void unlock (int tid)
 {
 	threadTickets[tid] = 0;
+	mfence();
 }
 
 void critSection(void *id)
