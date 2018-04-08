@@ -17,14 +17,16 @@ void mfence (void) {
   asm volatile ("mfence" : : : "memory");
 }
 
+/*We need an mfence for thread tickets since this variable is globally shared across all threads and is being modified in both
+*lock and unlock section. Hence the compile should avoid reordering the commits to this variable, as should always read before 
+*writing new value. Hence we need mfence while modifying the value of thread tickets. Which happens once in Lock() 
+*and once in unlock().
+*/
+	
 void lock (int tid)
 {
-	/*mfence required when ever we modify the data shared among the threads
-	*mfence signals all globally any modification done at a memory location and also prevents reordering of load store
-	*/
 	threadSelection[tid] = 1;
-	mfence();
-
+	
 	int max_ticket = 0;
 	int i = 0;
 	for (i = 0 ; i < THREAD_COUNT; ++i) {
