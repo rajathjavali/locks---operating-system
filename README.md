@@ -16,7 +16,7 @@ Pthreads programs require the extra -pthread argument to compile: gcc -O2 -Wall 
 "man pthreads" gives an overview of this API including a list of commands that each have their own man pages.
 Various Pthreads tutorials can be found on the web; 
 # Problem 1
-Write a pthreads program that creates a number of threads that repeatedly access a critical section that is synchronized using Lamport's Bakery algorithm.
+Write a pthreads program that creates a number of threads that repeatedly access a critical section that is synchronized using Lamport's Bakery algorithm (https://en.wikipedia.org/wiki/Lamport's_bakery_algorithm).
 
 Your program should take two command line options. First, the number of threads. Second, the number of seconds to run for.
 
