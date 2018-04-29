@@ -26,6 +26,7 @@ void mfence (void) {
 void lock (int tid)
 {
 	threadSelection[tid] = 1;
+	mfence();
 	
 	int max_ticket = 0;
 	int i = 0;
